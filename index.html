@@ -1,24 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLACK FLAG TUNING</title>
-    <style>
-        body,html{margin:0;padding:0;background:#000;color:#ff0000;font-family:'Impact',sans-serif;overflow:hidden}
-        .skull{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:30vw;filter:drop-shadow(0 0 40px #ff0000);animation:spin 20s linear infinite,pulse 2s infinite}
-        @keyframes spin{0%{transform:translate(-50%,-50%) rotate(0deg)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
-        @keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}
-        h1{font-size:8vw;position:absolute;bottom:10%;left:50%;transform:translateX(-50%);letter-spacing:10px;text-shadow:0 0 30px red}
-        .send{width:100vw;height:100vh;position:absolute;top:0;left:0;display:flex;align-items:center;justify-content:center}
-        .send:hover{animation:flash 0.5s}
-        @keyframes flash{0%,100%{background:#000}50%{background:#800000}}
-    </style>
-</head>
-<body>
-    <div class="skull">☠️</div>
-    <h1>BLACK FLAG TUNING</h1>
-    <a href="https://sendr.black/ipadownload/SENDR-v1.1-PCMExecutioner.ipa" class="send"></a>
-    <a href="https://sendr.black/android/SENDR-Black-v1.1.aab" class="send"></a>
-</body>
-</html>
+{
+  "name": "blackflagtuning",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "@stripe/stripe-js": "^4.5.0",
+    "stripe": "^16.11.0"
+  }
+}
+module.exports = {
+  env: {
+    STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_PUBLISHABLE_KEY,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+  },
+};
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe(process.env.STRIPE_PUBLISHABLE_KEY);
+
+export default function Home() {
+  const handleBuy = async (priceId) => {
+    const stripe = await stripePromise;
+    const { error } = await stripe.redirectToCheckout({
+      mode: 'payment',
+      lineItems: [{ price: priceId, quantity: 1 }],
+      successUrl: 'https://blackflagtuning.com/success?session_id={CHECKOUT_SESSION_ID}',
+      cancelUrl: 'https://blackflagtuning.com/cancel',
+    });
+    if (error) alert(error.message);
+  };
+
+  return (
+    <div style={{ background: 'black', color: 'red', textAlign: 'center', minHeight: '100vh' }}>
+      <div style={{ fontSize: '30vw', filter: 'drop-shadow(0 0 40px red)', animation: 'spin 20s linear infinite' }}>☠️</div>
+      <h1 style={{ fontSize: '8vw', letterSpacing: '10px', textShadow: '0 0 30px red' }}>BLACK FLAG TUNING</h1>
+      <div>
+        <button onClick={() => handleBuy('price_GMUnlock')} style={{ background: 'red', color: 'black', padding: '20px', margin: '10px', fontSize: '2em' }}>GM Unlock - $79.99</button>
+        <button onClick={() => handleBuy('price_FordUnlock')} style={{ background: 'red', color: 'black', padding: '20px', margin: '10px', fontSize: '2em' }}>Ford Unlock - $99.99</button>
+        {/* Add more buttons for FCA, Toyota, etc. */}
+      </div>
+      <style jsx global>{`
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
+}
